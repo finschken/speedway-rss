@@ -1,0 +1,32 @@
+name: Hämta speedwaynyheter
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: speedway-rss-import
+  cancel-in-progress: false
+jobs:
+  import:
+    if: github.repository == 'finschken/speedway-rss'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Installera beroenden
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Testa RSS-logiken
+        run: npm test
+      - name: Hämta och publicera nyheter
+        run: npm start
+        env:
+          RSS_IMPORT_EMAIL: ${{ secrets.RSS_IMPORT_EMAIL }}
+          RSS_IMPORT_PASSWORD: ${{ secrets.RSS_IMPORT_PASSWORD }}
