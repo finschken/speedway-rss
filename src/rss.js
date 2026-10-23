@@ -1,3 +1,4 @@
+import {prepareRssXml} from './rss-xml.js';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
 import {createHash} from 'node:crypto';
 export const MAX_BYTES=2*1024*1024;
@@ -10,7 +11,7 @@ export function classify(title,summary){const text=(title+' '+summary).toLocaleL
 export function keywordMatch(item,keywords='speedway',excludeWords=''){const words=(String(keywords).trim()||'speedway').split(',').map(s=>s.trim().toLocaleLowerCase('sv')).filter(Boolean),excluded=String(excludeWords||'').split(',').map(s=>s.trim().toLocaleLowerCase('sv')).filter(Boolean),text=(item.title+' '+item.summary).toLocaleLowerCase('sv');return words.some(w=>text.includes(w))&&!excluded.some(w=>text.includes(w));}
 export function parseFeed(xml,feedUrl,now=new Date()){
  if(Buffer.byteLength(xml)>MAX_BYTES)throw new Error('Flödet är för stort (max 2 MB).');
- if(/<!DOCTYPE|<!ENTITY/i.test(xml))throw new Error('XML med DOCTYPE eller entitetsdefinitioner stöds inte.');
+ xml=prepareRssXml(xml);
  if(XMLValidator.validate(xml)!==true)throw new Error('Källan innehåller ogiltig XML.');
  const parsed=new XMLParser({ignoreAttributes:false,parseTagValue:false,removeNSPrefix:true,processEntities:false,maxNestedTags:100}).parse(xml);
  const channel=parsed.rss?.channel||parsed.RDF,atom=parsed.feed;
